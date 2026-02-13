@@ -56,16 +56,23 @@ jobs:
           HTMLEOF
 
           for dir in */; do
+            name="${dir%/}"
+            slides=""
             if [ -f "$dir/slides.html" ]; then
-              name="${dir%/}"
+              slides="slides.html"
               title=$(head -20 "$dir/slides.md" | grep -m1 '^# ' | sed 's/^# //' || echo "$name")
+            elif [ -f "$dir/slides.pdf" ]; then
+              slides="slides.pdf"
+              title="$name"
+            fi
+            if [ -n "$slides" ]; then
               [ -z "$title" ] && title="$name"
-              echo "    <li><a href=\"${dir}slides.html\">$name — $title</a></li>" >> index.html
+              echo "    <li><a href=\"${dir}${slides}\">$name — $title</a></li>" >> index.html
               # Per-presentation redirect index
-              cat > "${dir}index.html" <<'REDIR'
+              cat > "${dir}index.html" <<REDIR
           <!DOCTYPE html>
-          <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=slides.html"><title>Redirecting…</title></head>
-          <body><p><a href="slides.html">View slides</a></p></body></html>
+          <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=${slides}"><title>Redirecting…</title></head>
+          <body><p><a href="${slides}">View slides</a></p></body></html>
           REDIR
             fi
           done
