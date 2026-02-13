@@ -1,0 +1,91 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build all presentations
+        run: |
+          npm install -g @marp-team/marp-cli
+          for dir in */; do
+            if [ -f "$dir/slides.md" ]; then
+              echo "Building $dir ..."
+              marp "$dir/slides.md" --html --output "$dir/slides.html"
+            fi
+          done
+
+      - name: Generate index pages
+        run: |
+          # Root index: auto-discover all presentations
+          cat > index.html <<'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Presentations</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 700px; margin: 4rem auto; padding: 0 1rem; }
+              h1 { color: #1a1a2e; }
+              a { color: #0969da; }
+              li { margin: 0.5rem 0; }
+            </style>
+          </head>
+          <body>
+            <h1>Presentations</h1>
+            <ul>
+          HTMLEOF
+
+          for dir in */; do
+            if [ -f "$dir/slides.html" ]; then
+              name="${dir%/}"
+              title=$(head -20 "$dir/slides.md" | grep -m1 '^# ' | sed 's/^# //' || echo "$name")
+              [ -z "$title" ] && title="$name"
+              echo "    <li><a href=\"${dir}slides.html\">$name — $title</a></li>" >> index.html
+              # Per-presentation redirect index
+              cat > "${dir}index.html" <<'REDIR'
+          <!DOCTYPE html>
+          <html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=slides.html"><title>Redirecting…</title></head>
+          <body><p><a href="slides.html">View slides</a></p></body></html>
+          REDIR
+            fi
+          done
+
+          cat >> index.html <<'HTMLEOF'
+            </ul>
+          </body>
+          </html>
+          HTMLEOF
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
