@@ -27,7 +27,7 @@ jobs:
       - name: Build all presentations
         run: |
           npm install -g @marp-team/marp-cli
-          for dir in */; do
+          for dir in $(ls -dr */); do
             if [ -f "$dir/slides.md" ]; then
               echo "Building $dir ..."
               marp "$dir/slides.md" --html --output "$dir/slides.html"
@@ -55,7 +55,7 @@ jobs:
             <ul>
           HTMLEOF
 
-          for dir in */; do
+          for dir in $(ls -dr */); do
             name="${dir%/}"
             slides=""
             if [ -f "$dir/slides.html" ]; then
