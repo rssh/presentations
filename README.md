@@ -8,5 +8,6 @@
 - [2018 — Paxos (and a little about other consensuses) (PWL Kyiv)](2018_pwl_kyiv_paxos/slides.pdf)
 - [2016 — Low-latency Java: breaking the boundaries (Code & Coffee #22)](2016_code_and_coffee/slides.pdf)
 - [2015 — Interface Definition Languages (Odessa Innovation Week)](2015_oiw/slides.pdf)
+- [2014 — Programming Languages: Some news for the last N years (Bibliotech)](2014_bibliotech_lang/slides.pdf)
 
 Published at <https://rssh.github.io/presentations/>
